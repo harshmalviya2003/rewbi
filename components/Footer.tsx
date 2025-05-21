@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
 import { Github, Linkedin, Twitter } from "lucide-react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
-const particleVariants = {
+const particleVariants: Variants = {
   animate: {
     y: [0, -20, 0],
     opacity: [0, 0.3, 0],
     transition: {
       duration: 3,
       repeat: Infinity,
-      repeatType: "loop",
+      repeatType: "loop" as const, // Add 'as const' to narrow the type
       ease: "easeInOut",
     },
   },
