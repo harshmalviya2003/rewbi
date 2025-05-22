@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 import { useInView } from 'react-intersection-observer';
@@ -10,6 +10,7 @@ import { useInView } from 'react-intersection-observer';
 gsap.registerPlugin(SplitText);
 
 export function Hero() {
+  const [isMobile, setIsMobile] = useState(false);
   const [ref, inView] = useInView({
     threshold: 0.2,
     triggerOnce: false
@@ -21,48 +22,80 @@ export function Hero() {
   const particlesRef = useRef<HTMLDivElement[]>([]);
 
   useEffect(() => {
+    // Check if mobile on mount and resize
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
     if (inView) {
-      // Left Side - Image Animation (only on desktop)
-      if (window.innerWidth >= 1024 && imageContainerRef.current) {
+      // Image Animation (different for mobile and desktop)
+      if (imageContainerRef.current) {
         const img = imageContainerRef.current.querySelector('img');
         const overlay = imageContainerRef.current.querySelector('.overlay');
         
         if (img && overlay) {
           const imageTimeline = gsap.timeline();
-          imageTimeline
-            .fromTo(
-              img,
-              {
-                scale: 1.2,
-                opacity: 0,
-                x: -50
-              },
-              {
-                scale: 1,
-                opacity: 1,
-                x: 0,
-                duration: 1.2,
-                ease: 'power3.out'
-              }
-            )
-            .fromTo(
-              overlay,
-              {
-                opacity: 0,
-                x: -100
-              },
-              {
-                opacity: 0.8,
-                x: 0,
-                duration: 1,
-                ease: 'power2.out'
-              },
-              '-=0.8'
-            );
+          
+          if (isMobile) {
+            // Mobile animation - comes from bottom
+            imageTimeline
+              .fromTo(
+                img,
+                {
+                  scale: 1.1,
+                  opacity: 0,
+                  y: 50
+                },
+                {
+                  scale: 1,
+                  opacity: 1,
+                  y: 0,
+                  duration: 1.2,
+                  ease: 'power3.out'
+                }
+              );
+          } else {
+            // Desktop animation - comes from left
+            imageTimeline
+              .fromTo(
+                img,
+                {
+                  scale: 1.2,
+                  opacity: 0,
+                  x: -50
+                },
+                {
+                  scale: 1,
+                  opacity: 1,
+                  x: 0,
+                  duration: 1.2,
+                  ease: 'power3.out'
+                }
+              )
+              .fromTo(
+                overlay,
+                {
+                  opacity: 0,
+                  x: -100
+                },
+                {
+                  opacity: 0.8,
+                  x: 0,
+                  duration: 1,
+                  ease: 'power2.out'
+                },
+                '-=0.8'
+              );
+          }
         }
       }
 
-      // Right Side - Text and Content Animation
+      // Content Animation (same for both mobile and desktop)
       const heading = contentRef.current?.querySelector('h1');
       if (!heading) return;
 
@@ -153,7 +186,7 @@ export function Hero() {
         });
       }
 
-      // Right Side - Canvas Particle Animation
+      // Canvas Particle Animation
       const canvas = canvasRef.current;
       if (canvas) {
         const ctx = canvas.getContext('2d');
@@ -226,41 +259,22 @@ export function Hero() {
         return () => {
           window.removeEventListener('resize', resizeCanvas);
           cancelAnimationFrame(animationFrameId);
-          splitText.revert();
         };
       }
     }
-  }, [inView]);
+  }, [inView, isMobile]);
 
   return (
     <section 
       ref={ref}
-      className="relative bg-background min-h-screen overflow-hidden"
+      className="relative 
+       bg-background min-h-screen overflow-hidden"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
-        {/* Left Side - Image with Animation (hidden on mobile) */}
-        <div
-          ref={imageContainerRef}
-          className="hidden lg:flex w-full h-full bg-[#1A3C34] items-center justify-center relative overflow-hidden"
-        >
-          <div className="relative w-full h-full">
-            <Image
-              src="/hero.avif"
-              alt="Abstract Modern Structure"
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
-              priority
-              onError={() => console.error('Failed to load hero image')}
-            />
-            <div className="overlay absolute inset-0 bg-gradient-to-r from-[#1A3C34]/80 to-transparent" />
-          </div>
-        </div>
-
-        {/* Right Side - Content with Canvas Background (always visible) */}
+      <div className="flex flex-col lg:grid lg:grid-cols-2 min-h-screen">
+        {/* Content Section - Always first on mobile, right side on desktop */}
         <div
           ref={contentRef}
-          className="w-full h-full bg-[#1A3C34] flex items-center justify-center p-8 relative"
+          className="w-full pt-40 h-full bg-[#1A3C34] flex items-center justify-center p-8 relative order-1 lg:order-2"
         >
           <canvas
             ref={canvasRef}
@@ -294,6 +308,25 @@ export function Hero() {
                 Learn More
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Image Section - Second on mobile, left side on desktop */}
+        <div
+          ref={imageContainerRef}
+          className="w-full h-[50vh] lg:h-full bg-[#1A3C34] flex items-center justify-center relative overflow-hidden order-2 lg:order-1"
+        >
+          <div className="relative w-full h-full">
+            <Image
+              src="/hero.avif"
+              alt="Abstract Modern Structure"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+              priority
+              onError={() => console.error('Failed to load hero image')}
+            />
+            <div className="overlay absolute inset-0 bg-gradient-to-r from-[#1A3C34]/80 to-transparent lg:block hidden" />
           </div>
         </div>
       </div>

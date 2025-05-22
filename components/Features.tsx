@@ -73,7 +73,7 @@ const Panels: React.FC = () => {
           ))}
         </div>
         <div className="relative z-10">
-          <h1 className="text-7xl font-extrabold text-gray-100 mb-4 tracking-tight">We're rebuilding the grid by financing, optimizing, and maintaining clean energy sources. We offer contracted revenue streams to battery storage projects.</h1>
+          <h1 className="md:text-7xl text-4xl font-extrabold text-gray-100 mb-4 tracking-tight">We're rebuilding the grid by financing, optimizing, and maintaining clean energy sources. We offer contracted revenue streams to battery storage projects.</h1>
           
           <div className="flex flex-col items-center mt-6">
             <span className="text-base bg-[#1A3C34]">Scroll down</span>
